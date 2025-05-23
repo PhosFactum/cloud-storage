@@ -9,3 +9,4 @@ psycopg2-binary
 pydantic-settings
 pydantic[email]
 passlib
+python-multipart

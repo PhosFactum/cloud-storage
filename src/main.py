@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from database import Base, engine
-from routes import auth, user
+from routes import auth, user, files
 
 
 app = FastAPI(
@@ -11,11 +11,7 @@ app = FastAPI(
 
 app.include_router(auth.router)
 app.include_router(user.router)
+app.include_router(files.router)
 
 
 Base.metadata.create_all(bind=engine)
-
-
-@app.get("/")
-async def root():
-    return {"message": "Cloud Storage Backend is working!"}
