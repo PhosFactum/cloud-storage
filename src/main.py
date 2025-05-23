@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from app.database import Base, engine
-from app.routes import auth
+from database import Base, engine
+from routes import auth, user
 
 
 app = FastAPI(
@@ -10,6 +10,8 @@ app = FastAPI(
 )
 
 app.include_router(auth.router)
+app.include_router(user.router)
+
 
 Base.metadata.create_all(bind=engine)
 

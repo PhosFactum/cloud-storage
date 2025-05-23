@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: cloud_db
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+
+  backend:
+    build: .
+    container_name: cloud_app
+    depends_on:
+      - db
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src
+      - ./migrations:/app/migrations
+      - ./run.sh:/app/run.sh
+    ports:
+      - "8000:8000"
+    command: ["./run.sh"]
+
+volumes:
+  db_data:
