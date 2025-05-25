@@ -1,6 +1,27 @@
 # src/crud/file.py
+import os
 from sqlalchemy.orm import Session
 from models.file import File
+
+
+def get_file_details(db: Session, filename: str) -> File | None:
+    """
+    Return the File ORM object by filename, or None.
+    """
+    return db.query(File).filter(File.filename == filename).first()
+
+def get_user_file_stats(db: Session, owner_id: int) -> tuple[int, int]:
+    """
+    Return (count, sum_size) of all files for this owner.
+    """
+    files = db.query(File).filter(File.owner_id == owner_id).all()
+    total_files = len(files)
+    total_size = 0
+    for f in files:
+        path = os.path.join("uploads", f.filename)
+        if os.path.exists(path):
+            total_size += os.path.getsize(path)
+    return total_files, total_size
 
 def get_files_by_owner(db: Session, owner_id: int):
     return db.query(File).filter(File.owner_id == owner_id).all()

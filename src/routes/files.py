@@ -22,8 +22,11 @@ from crud.file import (
     delete_file_record,
     get_files_by_owner,
     rename_file_record,
+    get_file_details,
+    get_user_file_stats,
 )
-from schemas.file import FileInfo, RenameRequest
+from schemas.file import FileInfo, RenameRequest, FileDetail, FileStats
+from utils.exceptions import get_error_404
 
 router = APIRouter(
     prefix="/files",
@@ -36,6 +39,49 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 @router.get(
+    "/stats",
+    response_model=FileStats,
+    summary="Get user file statistics",
+    response_description="Total number of files and their combined size in bytes"
+)
+async def file_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    total_files, total_size = get_user_file_stats(db, current_user.id)
+    return FileStats(total_files=total_files, total_size=total_size)
+
+
+@router.get(
+    "/{filename}/info",
+    response_model=FileDetail,
+    summary="Get file detail",
+    response_description="Filename, owner, upload time, and size"
+)
+async def file_info(
+    filename: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    record = get_file_details(db, filename)
+    get_error_404(record)
+    if record.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    path = os.path.join(UPLOAD_DIR, filename)
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="File not found on disk")
+
+    size = os.path.getsize(path)
+    return FileDetail(
+        filename=record.filename,
+        owner_id=record.owner_id,
+        uploaded_at=record.uploaded_at,
+        size=size
+    )
+
+
+@router.get(
     "/",
     response_model=list[str],
     summary="List user files",
@@ -45,9 +91,6 @@ async def list_files(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Return a list of filenames uploaded by the current user.
-    """
     files = get_files_by_owner(db, current_user.id)
     return [f.filename for f in files]
 
@@ -63,12 +106,10 @@ async def download_file(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Download a file by its filename, if owned by the current user.
-    """
     record = crud_get_file(db, filename)
-    if not record or record.owner_id != current_user.id:
-        raise HTTPException(status_code=404, detail="File not found or access denied")
+    get_error_404(record)
+    if record.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
 
     path = os.path.join(UPLOAD_DIR, filename)
     if not os.path.exists(path):
@@ -93,16 +134,12 @@ async def upload_file(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Upload a file and associate it with the current user.
-    Returns the file metadata (filename, owner_id, uploaded_at).
-    """
     target = os.path.join(UPLOAD_DIR, file.filename)
     with open(target, "wb") as buf:
         shutil.copyfileobj(file.file, buf)
 
     file_record = create_file(db, file.filename, current_user.id)
-    return file_record  # FileInfo via orm_mode
+    return file_record
 
 
 @router.put(
@@ -117,17 +154,14 @@ async def rename_file(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Rename a file owned by the current user.
-    - **filename**: current name of the file
-    - **new_name**: desired new filename
-    """
     record = crud_get_file(db, filename)
-    if not record or record.owner_id != current_user.id:
-        raise HTTPException(status_code=404, detail="File not found or access denied")
+    get_error_404(record)
+    if record.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
 
     old_path = os.path.join(UPLOAD_DIR, filename)
     new_path = os.path.join(UPLOAD_DIR, req.new_name)
+
     if not os.path.exists(old_path):
         raise HTTPException(status_code=404, detail="File not found on disk")
     if os.path.exists(new_path):
@@ -148,15 +182,13 @@ async def delete_file(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Delete a file owned by the current user.
-    """
     record = crud_get_file(db, filename)
-    if not record or record.owner_id != current_user.id:
-        raise HTTPException(status_code=404, detail="File not found or access denied")
+    get_error_404(record)
+    if record.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
 
-    # remove from disk
     path = os.path.join(UPLOAD_DIR, filename)
-    os.remove(path)
-    # remove from db
+    if os.path.exists(path):
+        os.remove(path)
+
     delete_file_record(db, filename)

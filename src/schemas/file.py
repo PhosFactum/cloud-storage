@@ -1,12 +1,8 @@
 # src/schemas/file.py
-
 from datetime import datetime
 from pydantic import BaseModel
 
 class FileInfo(BaseModel):
-    """
-    Shared properties of a file.
-    """
     filename: str
     owner_id: int
     uploaded_at: datetime
@@ -14,9 +10,18 @@ class FileInfo(BaseModel):
     class Config:
         orm_mode = True
 
-
 class RenameRequest(BaseModel):
-    """
-    Request schema for renaming a file.
-    """
     new_name: str
+
+class FileDetail(FileInfo):
+    """
+    Detailed info about a single file, including its size.
+    """
+    size: int
+
+class FileStats(BaseModel):
+    """
+    Aggregated statistics for a user's files.
+    """
+    total_files: int
+    total_size: int
