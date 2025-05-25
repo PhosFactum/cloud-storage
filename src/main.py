@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from database import Base, engine
-from routes import auth, user, files
+from routes import auth, users, files
 
 
 app = FastAPI(
@@ -10,7 +10,7 @@ app = FastAPI(
 )
 
 app.include_router(auth.router)
-app.include_router(user.router)
+app.include_router(users.router)
 app.include_router(files.router)
 
 
