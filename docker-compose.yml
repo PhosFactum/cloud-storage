@@ -5,11 +5,10 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    volumes:
-      - db_data:/var/lib/postgresql/data
     ports:
       - "5434:5432"
-
+    volumes:
+      - db_data:/var/lib/postgresql/data
 
   backend:
     build: .

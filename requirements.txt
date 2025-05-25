@@ -10,3 +10,4 @@ pydantic-settings
 pydantic[email]
 passlib
 python-multipart
+alembic
