@@ -9,7 +9,6 @@ from fastapi import (
     status,
 )
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 import shutil
 import os
@@ -24,6 +23,7 @@ from crud.file import (
     get_files_by_owner,
     rename_file_record,
 )
+from schemas.file import FileInfo, RenameRequest
 
 router = APIRouter(
     prefix="/files",
@@ -35,18 +35,11 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-class RenameRequest(BaseModel):
-    """
-    Request schema for renaming a file.
-    """
-    new_name: str
-
-
 @router.get(
     "/",
     response_model=list[str],
     summary="List user files",
-    response_description="Filenames the user may download"
+    response_description="Filenames the user may download",
 )
 async def list_files(
     db: Session = Depends(get_db),
@@ -63,7 +56,7 @@ async def list_files(
     "/download/{filename}",
     response_class=FileResponse,
     summary="Download a file",
-    response_description="Binary content of the requested file"
+    response_description="Binary content of the requested file",
 )
 async def download_file(
     filename: str,
@@ -84,15 +77,16 @@ async def download_file(
     return FileResponse(
         path=path,
         filename=filename,
-        media_type="application/octet-stream"
+        media_type="application/octet-stream",
     )
 
 
 @router.post(
     "/upload",
+    response_model=FileInfo,
     status_code=status.HTTP_201_CREATED,
     summary="Upload a file",
-    response_description="Uploaded file info"
+    response_description="Uploaded file metadata",
 )
 async def upload_file(
     file: UploadFile = File(...),
@@ -101,25 +95,21 @@ async def upload_file(
 ):
     """
     Upload a file and associate it with the current user.
-    Returns the filename, owner_id and timestamp.
+    Returns the file metadata (filename, owner_id, uploaded_at).
     """
     target = os.path.join(UPLOAD_DIR, file.filename)
     with open(target, "wb") as buf:
         shutil.copyfileobj(file.file, buf)
 
     file_record = create_file(db, file.filename, current_user.id)
-    return {
-        "filename": file_record.filename,
-        "owner_id": file_record.owner_id,
-        "uploaded_at": file_record.uploaded_at,
-    }
+    return file_record  # FileInfo via orm_mode
 
 
 @router.put(
     "/{filename}",
     response_model=dict,
     summary="Rename a file",
-    response_description="Old and new filename"
+    response_description="Old and new filename",
 )
 async def rename_file(
     filename: str,

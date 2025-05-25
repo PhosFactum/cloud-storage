@@ -1,5 +1,6 @@
 # src/routes/users.py
 
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -16,11 +17,12 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)],
 )
 
+
 @router.get(
     "/",
-    response_model=list[UserRead],
+    response_model=List[UserRead],
     summary="List users",
-    response_description="A list of user profiles"
+    response_description="A list of user profiles with their filenames"
 )
 def read_users(
     skip: int = 0,
@@ -29,17 +31,27 @@ def read_users(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Retrieve a paginated list of users.
-    - **skip**: number of items to skip
-    - **limit**: maximum number of users to return
+    Retrieve a paginated list of users, each with their filenames.
     """
-    return get_users(db, skip, limit)
+    users = get_users(db, skip, limit)
+    result: List[UserRead] = []
+    for u in users:
+        filenames = [f.filename for f in u.files]
+        result.append(
+            UserRead(
+                id=u.id,
+                email=u.email,
+                files=filenames
+            )
+        )
+    return result
+
 
 @router.get(
     "/{user_id}",
     response_model=UserRead,
     summary="Get user by ID",
-    response_description="The user with the given ID"
+    response_description="The user with the given ID and their filenames"
 )
 def read_user(
     user_id: int,
@@ -47,12 +59,17 @@ def read_user(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Retrieve a single user by their unique ID.
-    - **user_id**: integer ID of the user
+    Retrieve a single user (with their filenames).
     """
-    user = get_user(db, user_id)
-    get_error_404(user)
-    return user
+    u = get_user(db, user_id)
+    get_error_404(u)
+    filenames = [f.filename for f in u.files]
+    return UserRead(
+        id=u.id,
+        email=u.email,
+        files=filenames
+    )
+
 
 @router.put(
     "/{user_id}",
@@ -73,7 +90,14 @@ def edit_user(
     """
     existing = get_user(db, user_id)
     get_error_404(existing)
-    return update_user(db, user_id, user_in)
+    updated = update_user(db, user_id, user_in)
+    filenames = [f.filename for f in updated.files]
+    return UserRead(
+        id=updated.id,
+        email=updated.email,
+        files=filenames
+    )
+
 
 @router.delete(
     "/{user_id}",
