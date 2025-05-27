@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Cloud Storage Client</title>
+  <script src="https://unpkg.com/vue@3"></script>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; max-width: 600px; margin: auto }
+    input, button { margin: .5rem 0; display: block; width: 100% }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Аутентификация -->
+    <template v-if="!token">
+      <h2>Вход</h2>
+      <input v-model="email"    placeholder="Email" />
+      <input v-model="password" type="password" placeholder="Пароль" />
+      <button @click="login">Войти</button>
+      <button @click="register">Зарегистрироваться</button>
+      <div style="color:red">{{ authError }}</div>
+    </template>
+
+    <!-- Главное окно -->
+    <template v-else>
+      <h2>Привет, {{ profile.email }}</h2>
+      <button @click="logout">Выйти</button>
+
+      <h3>Загрузка файла</h3>
+      <input type="file" ref="f" />
+      <button @click="upload">Загрузить</button>
+
+      <h3>Мои файлы ({{ files.length }})</h3>
+      <ul>
+        <li v-for="f in files" :key="f">
+          {{ f }}
+          <button @click="download(f)">📥</button>
+          <button @click="remove(f)">🗑</button>
+        </li>
+      </ul>
+
+      <h3>Статистика</h3>
+      <div>Всего файлов: {{ stats.total_files }}</div>
+      <div>Общий размер: {{ stats.total_size }} байт</div>
+    </template>
+  </div>
+
+  <script>
+  const API = "http://localhost:8002"
+  const app = Vue.createApp({
+    data() {
+      return {
+        email: "",
+        password: "",
+        token: localStorage.token || "",
+        authError: "",
+        profile: {},
+        files: [],
+        stats: {}
+      }
+    },
+    created() {
+      if (this.token) this.fetchAll()
+    },
+    methods: {
+      async register() { await this.auth("/auth/register") },
+      async login()    { await this.auth("/auth/login")    },
+
+      async auth(path) {
+        this.authError = ""
+        try {
+          const res = await fetch(API + path, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email:this.email, password:this.password })
+          })
+          if (!res.ok) throw await res.json()
+          const data = await res.json()
+          this.token = data.access_token
+          localStorage.token = this.token
+          await this.fetchAll()
+        } catch (e) {
+          this.authError = e.detail || JSON.stringify(e)
+        }
+      },
+
+      logout() {
+        this.token = ""
+        localStorage.removeItem("token")
+        this.profile = {}
+        this.files = []
+        this.stats = {}
+      },
+
+      authHeaders() {
+        return { "Authorization": "Bearer " + this.token }
+      },
+
+      async fetchAll() {
+        // 1. Получаем профиль текущего пользователя
+        const me = await fetch(API + "/auth/me", {
+          headers: this.authHeaders()
+        })
+        this.profile = await me.json()
+
+        // 2. Список файлов
+        const fl = await fetch(API + "/files/", {
+          headers: this.authHeaders()
+        })
+        this.files = await fl.json()
+
+        // 3. Статистика
+        const st = await fetch(API + "/files/stats", {
+          headers: this.authHeaders()
+        })
+        this.stats = await st.json()
+      },
+
+      async upload() {
+        const file = this.$refs.f.files[0]
+        if (!file) return
+
+        const fd = new FormData()
+        fd.append("file", file)
+
+        await fetch(API + "/files/upload", {
+          method: "POST",
+          headers: this.authHeaders(),
+          body: fd
+        })
+        await this.fetchAll()
+      },
+
+      download(name) {
+        // открываем в новой вкладке, чтобы браузер начал скачивать
+        window.open(`${API}/files/download/${encodeURIComponent(name)}?token=${this.token}`)
+      },
+
+      async remove(name) {
+        await fetch(`${API}/files/${encodeURIComponent(name)}`, {
+          method: "DELETE",
+          headers: this.authHeaders()
+        })
+        await this.fetchAll()
+      }
+    }
+  }).mount("#app")
+  </script>
+</body>
+</html>
+

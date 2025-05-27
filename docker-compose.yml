@@ -23,7 +23,7 @@ services:
       - ./run.sh:/app/run.sh
       - ./uploads:/app/uploads
     ports:
-      - "8000:8000"
+      - "8002:8002"
     command: ["./run.sh"]
 
 volumes:
