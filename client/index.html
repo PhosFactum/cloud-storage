@@ -29,6 +29,7 @@
       <h3>Загрузка файла</h3>
       <input type="file" ref="f" />
       <button @click="upload">Загрузить</button>
+      <div style="color:red">{{ fileError }}</div>
 
       <h3>Мои файлы ({{ files.length }})</h3>
       <ul>
@@ -54,6 +55,7 @@
         password: "",
         token: localStorage.token || "",
         authError: "",
+        fileError: "",
         profile: {},
         files: [],
         stats: {}
@@ -72,7 +74,7 @@
           const res = await fetch(API + path, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email:this.email, password:this.password })
+            body: JSON.stringify({ email: this.email, password: this.password })
           })
           if (!res.ok) throw await res.json()
           const data = await res.json()
@@ -97,42 +99,43 @@
       },
 
       async fetchAll() {
-        // 1. Получаем профиль текущего пользователя
-        const me = await fetch(API + "/auth/me", {
-          headers: this.authHeaders()
-        })
+        // профиль
+        const me = await fetch(API + "/auth/me", { headers: this.authHeaders() })
         this.profile = await me.json()
 
-        // 2. Список файлов
-        const fl = await fetch(API + "/files/", {
-          headers: this.authHeaders()
-        })
+        // файлы
+        const fl = await fetch(API + "/files/", { headers: this.authHeaders() })
         this.files = await fl.json()
 
-        // 3. Статистика
-        const st = await fetch(API + "/files/stats", {
-          headers: this.authHeaders()
-        })
+        // статистика
+        const st = await fetch(API + "/files/stats", { headers: this.authHeaders() })
         this.stats = await st.json()
       },
 
       async upload() {
+        this.fileError = ""
         const file = this.$refs.f.files[0]
-        if (!file) return
+        if (!file) {
+          this.fileError = "Выберите файл"
+          return
+        }
 
         const fd = new FormData()
         fd.append("file", file)
 
-        await fetch(API + "/files/upload", {
+        const res = await fetch(API + "/files/upload", {
           method: "POST",
-          headers: this.authHeaders(),
+          headers: this.authHeaders(),  // не указываем Content-Type
           body: fd
         })
+        if (!res.ok) {
+          const err = await res.json()
+          this.fileError = err.detail || "Ошибка загрузки"
+        }
         await this.fetchAll()
       },
 
       download(name) {
-        // открываем в новой вкладке, чтобы браузер начал скачивать
         window.open(`${API}/files/download/${encodeURIComponent(name)}?token=${this.token}`)
       },
 

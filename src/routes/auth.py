@@ -7,7 +7,10 @@ from schemas.user import UserCreate, UserRead
 from schemas.token import Token
 from crud.user import get_user_by_email, create_user
 from auth.jwt import create_access_token, verify_password
+from auth.dependencies import get_current_user
 from database import get_db
+import models.user as models
+import schemas.user as schemas
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -28,14 +31,11 @@ def register(
     - **user_in**: JSON payload with `email` and `password`.
     - **Returns**: the created user (id and email).
     """
-    # Check if email is already registered
     if get_user_by_email(db, user_in.email):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
-
-    # Create user and return basic profile
     return create_user(db, user_in)
 
 
@@ -54,19 +54,36 @@ def login(
     - **user_in**: JSON payload with `email` and `password`.
     - **Returns**: JSON with `access_token` and `token_type`.
     """
-    # Retrieve user by email
     user = get_user_by_email(db, user_in.email)
-    # Verify password and user existence
     if not user or not verify_password(user_in.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
-    # Generate JWT with subject = user's email
-    token = create_access_token(subject=user_in.email)
+    token = create_access_token(subject=user.email)
     return {
         "access_token": token,
         "token_type": "bearer"
     }
+
+
+@router.get(
+    "/me",
+    response_model=UserRead,
+    summary="Get current user profile",
+    response_description="Current user’s id, email and their filenames"
+)
+def read_current_user(
+    current_user: models.User = Depends(get_current_user),
+):
+    """
+    Return the current user's profile and list of their filenames.
+    """
+    filenames = [f.filename for f in current_user.files]
+    return schemas.UserRead(
+        id=current_user.id,
+        email=current_user.email,
+        files=filenames
+    )
+
