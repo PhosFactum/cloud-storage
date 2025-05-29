@@ -1,3 +1,5 @@
+// app.js
+
 const API = "http://localhost:8002"
 
 const app = Vue.createApp({
@@ -51,13 +53,15 @@ const app = Vue.createApp({
     },
 
     async fetchAll() {
-      // профиль
-      const me  = await fetch(API + "/auth/me", { headers: this.authHeaders() })
+      // profile
+      const me  = await fetch(API + "/auth/me",    { headers: this.authHeaders() })
       this.profile = await me.json()
-      // файлы
+
+      // files
       const fl  = await fetch(API + "/files/",     { headers: this.authHeaders() })
       this.files = await fl.json()
-      // статистика
+
+      // stats
       const st  = await fetch(API + "/files/stats",{ headers: this.authHeaders() })
       this.stats = await st.json()
     },
@@ -75,7 +79,7 @@ const app = Vue.createApp({
 
       const res = await fetch(API + "/files/upload", {
         method:  "POST",
-        headers: this.authHeaders(),
+        headers: this.authHeaders(),  // do not set Content-Type manually
         body:    fd
       })
       if (!res.ok) {

@@ -9,7 +9,7 @@ body {
   background: #f9f9f9;
 }
 
-/* Поля ввода */
+/* Inputs */
 input {
   display: block;
   width: 100%;
@@ -22,15 +22,13 @@ input {
   box-sizing: border-box;
   transition: border-color 0.2s;
 }
-
 input:focus {
   border-color: #007bff;
   outline: none;
 }
 
-/* Общий стиль кнопок */
+/* Buttons */
 button {
-  display: inline-block;
   background-color: #007bff;
   color: #fff;
   border: none;
@@ -39,42 +37,38 @@ button {
   border-radius: 4px;
   cursor: pointer;
   transition: opacity 0.2s ease-in-out;
-  margin: 0.5rem 0;
 }
-
 button:hover {
   opacity: 0.8;
 }
 
-/* 1. Секция входа: разнесём две кнопки и добавим между ними gap */
-#app > template[v-if] {
+/* Auth buttons wrapper */
+.auth-buttons {
   display: flex;
-  gap: 0.5rem;         /* расстояние между кнопками */
-  flex-wrap: wrap;
+  gap: 0.5rem;        /* space between buttons */
   justify-content: center;
-  max-width: 300px;
-  margin: 2rem auto;
-  text-align: left;
+  margin: 1rem 0;
+}
+.auth-buttons button {
+  flex: 1;
 }
 
-#app > template[v-if] button {
-  flex: 1;             /* чтобы обе кнопки были одинаковой ширины */
-  margin: 0;           /* сброс vertical-margin, так как управляли gap-ом */
+/* Logout button spacing */
+.logout-btn {
+  margin-bottom: 1rem;
 }
 
-/* Ошибки */
+/* Error messages */
 .error {
   color: #e74c3c;
   margin-top: 0.5rem;
 }
 
-/* Список файлов */
+/* File list */
 ul {
   list-style: none;
   padding: 0;
 }
-
-/* Строка файла: центрируется и ограничена по ширине */
 li {
   display: flex;
   align-items: center;
@@ -86,33 +80,23 @@ li {
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
-
-/* Кнопки внутри li — чуть уже и с маленьким gap */
-li button {
-  margin: 0 0.25rem;
-  padding: 0.25rem 0.5rem;
+li .filename {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 0.5rem;
 }
 
-/* Заголовки */
+/* File actions wrapper */
+.file-actions {
+  display: flex;
+  gap: 0.25rem;       /* fixed gap between download/delete */
+}
+
+/* Headings */
 h2, h3 {
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
-}
-
-/* 2. Секция загрузки: инпут + кнопка в один ряд, кнопка прижата справа */
-.upload-section {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 400px;
-  margin: 1rem auto;
-}
-
-.upload-section input[type="file"] {
-  flex: 1;
-}
-
-.upload-section button {
-  margin-left: 0.5rem;
 }
 

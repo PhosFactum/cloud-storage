@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Cloud Storage Client</title>
-  <script src="https://unpkg.com/vue@3"></script>
-  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="app">
@@ -13,15 +12,19 @@
       <h2>Вход</h2>
       <input v-model="email" placeholder="Email" />
       <input v-model="password" type="password" placeholder="Пароль" />
-      <button @click="login">Войти</button>
-      <button @click="register">Зарегистрироваться</button>
+
+      <div class="auth-buttons">
+        <button @click="login">Войти</button>
+        <button @click="register">Зарегистрироваться</button>
+      </div>
+
       <div class="error">{{ authError }}</div>
     </template>
 
-    <!-- Main window -->
+    <!-- Main view -->
     <template v-else>
       <h2>Привет, {{ profile.email }}</h2>
-      <button @click="logout">Выйти</button>
+      <button class="logout-btn" @click="logout">Выйти</button>
 
       <h3>Загрузка файла</h3>
       <input type="file" ref="f" />
@@ -31,9 +34,11 @@
       <h3>Мои файлы ({{ files.length }})</h3>
       <ul>
         <li v-for="f in files" :key="f">
-          {{ f }}
-          <button @click="download(f)">📥</button>
-          <button @click="remove(f)">🗑</button>
+          <span class="filename">{{ f }}</span>
+          <div class="file-actions">
+            <button @click="download(f)">📥</button>
+            <button @click="remove(f)">🗑</button>
+          </div>
         </li>
       </ul>
 
@@ -43,7 +48,8 @@
     </template>
   </div>
 
-  <script src="./app.js"></script>
+  <script src="https://unpkg.com/vue@3"></script>
+  <script src="app.js"></script>
 </body>
 </html>
 
