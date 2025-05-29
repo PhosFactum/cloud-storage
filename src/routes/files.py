@@ -10,6 +10,7 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 import shutil
 import os
 
@@ -138,7 +139,15 @@ async def upload_file(
     with open(target, "wb") as buf:
         shutil.copyfileobj(file.file, buf)
 
-    file_record = create_file(db, file.filename, current_user.id)
+    try:
+        file_record = create_file(db, file.filename, current_user.id)
+    except IntegrityError:
+        # откатим сессию и сообщим клиенту, что файл с таким именем уже есть
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File with this name already exists"
+        )
     return file_record
 
 

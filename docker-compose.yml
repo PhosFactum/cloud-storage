@@ -17,14 +17,23 @@ services:
       - db
     env_file:
       - .env
-    volumes:
-      - ./src:/app/src
-      - ./migrations:/app/migrations
-      - ./run.sh:/app/run.sh
-      - ./uploads:/app/uploads
     ports:
       - "8002:8002"
-    command: ["./run.sh"]
+    volumes:
+      - ./src:/app/src
+      - ./client:/app/client
+      - ./migrations:/app/migrations
+      - ./run.sh:/app/run.sh
+      - ./requirements.txt:/app/requirements.txt
+    x-develop:
+      watch:
+        - action: sync+restart
+          paths: ["src"]
+        - action: sync+restart
+          paths: ["client"]
+        - action: rebuild+restart
+          paths: ["run.sh", "requirements.txt"]
 
 volumes:
   db_data:
+

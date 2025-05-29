@@ -8,7 +8,7 @@
 </head>
 <body>
   <div id="app">
-    <!-- Аутентификация -->
+    <!-- Authentication -->
     <template v-if="!token">
       <h2>Вход</h2>
       <input v-model="email" placeholder="Email" />
@@ -18,7 +18,7 @@
       <div class="error">{{ authError }}</div>
     </template>
 
-    <!-- Главное окно -->
+    <!-- Main window -->
     <template v-else>
       <h2>Привет, {{ profile.email }}</h2>
       <button @click="logout">Выйти</button>
