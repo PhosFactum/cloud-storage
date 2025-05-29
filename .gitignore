@@ -3,6 +3,7 @@ __pycache__/
 .idea/
 *.log
 .venv/
+uploads/
 
 # Sensitive data
 .env

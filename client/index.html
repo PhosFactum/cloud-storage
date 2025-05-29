@@ -6,7 +6,12 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="app">
+  <!-- HEADER -->
+  <header class="site-header">
+    <h1>Cloud Storage</h1>
+  </header>
+
+  <main id="app">
     <!-- Authentication -->
     <template v-if="!token">
       <h2>Вход</h2>
@@ -23,7 +28,7 @@
 
     <!-- Main view -->
     <template v-else>
-      <h2>Привет, {{ profile.email }}</h2>
+      <h2>Привет, пользователь!</h2>
       <button class="logout-btn" @click="logout">Выйти</button>
 
       <h3>Загрузка файла</h3>
@@ -46,7 +51,22 @@
       <div>Всего файлов: {{ stats.total_files }}</div>
       <div>Общий размер: {{ stats.total_size }} байт</div>
     </template>
-  </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <p>
+      <strong>Cloud Storage API</strong> — это защищённое REST API для загрузки, управления и получения информации о пользовательских файлах.<br>
+      Проектная работа по дисциплине «Алгоритмы и структуры данных».<br>
+      Технологический стек: FastAPI, PostgreSQL, SQLAlchemy, JWT-аутентификация, Docker.
+    </p>
+    <p>
+      Репозиторий:
+      <a href="https://github.com/PhosFactum/cloud-storage" target="_blank">
+        github.com/PhosFactum/cloud-storage
+      </a>
+    </p>
+  </footer>
 
   <script src="https://unpkg.com/vue@3"></script>
   <script src="app.js"></script>

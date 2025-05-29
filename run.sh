@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Activating venv
-source .venv/bin/activate
-
 # Migrations of Alembic
 echo "Running Alembic migrations..."
 alembic upgrade head

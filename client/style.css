@@ -2,11 +2,34 @@
 
 body {
   font-family: sans-serif;
+  padding: 0;
+  margin: 0;
+  background: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header */
+.site-header {
+  background: #007bff;
+  color: #fff;
+  padding: 1rem 0;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.site-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+/* Main */
+main#app {
+  flex: 1;
   padding: 1rem;
   max-width: 600px;
   margin: auto;
   text-align: center;
-  background: #f9f9f9;
 }
 
 /* Inputs */
@@ -23,7 +46,7 @@ input {
   transition: border-color 0.2s;
 }
 input:focus {
-  border-color: #007bff;
+  border-color: #0056b3;
   outline: none;
 }
 
@@ -45,7 +68,7 @@ button:hover {
 /* Auth buttons wrapper */
 .auth-buttons {
   display: flex;
-  gap: 0.5rem;        /* space between buttons */
+  gap: 0.5rem;
   justify-content: center;
   margin: 1rem 0;
 }
@@ -91,12 +114,29 @@ li .filename {
 /* File actions wrapper */
 .file-actions {
   display: flex;
-  gap: 0.25rem;       /* fixed gap between download/delete */
+  gap: 0.25rem;
 }
 
 /* Headings */
 h2, h3 {
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
+}
+
+/* Footer */
+.site-footer {
+  background: #f1f1f1;
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #555;
+  border-top: 1px solid #ddd;
+}
+.site-footer a {
+  color: #007bff;
+  text-decoration: none;
+}
+.site-footer a:hover {
+  text-decoration: underline;
 }
 

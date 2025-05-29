@@ -62,8 +62,9 @@ const app = Vue.createApp({
       this.files = await fl.json()
 
       // stats
-      const st  = await fetch(API + "/files/stats",{ headers: this.authHeaders() })
+      const st = await fetch(API + "/files/stats", { headers: this.authHeaders() })
       this.stats = await st.json()
+
     },
 
     async upload() {

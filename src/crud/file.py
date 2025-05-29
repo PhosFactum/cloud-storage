@@ -3,6 +3,7 @@ import os
 from sqlalchemy.orm import Session
 from models.file import File
 
+UPLOAD_DIR = "uploads" 
 
 def get_file_details(db: Session, filename: str) -> File | None:
     """
