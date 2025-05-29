@@ -7,6 +7,7 @@
   <style>
     body { font-family: sans-serif; padding: 1rem; max-width: 600px; margin: auto }
     input, button { margin: .5rem 0; display: block; width: 100% }
+    .error { color: red; }
   </style>
 </head>
 <body>
@@ -14,11 +15,11 @@
     <!-- Аутентификация -->
     <template v-if="!token">
       <h2>Вход</h2>
-      <input v-model="email"    placeholder="Email" />
+      <input v-model="email" placeholder="Email" />
       <input v-model="password" type="password" placeholder="Пароль" />
       <button @click="login">Войти</button>
       <button @click="register">Зарегистрироваться</button>
-      <div style="color:red">{{ authError }}</div>
+      <div class="error">{{ authError }}</div>
     </template>
 
     <!-- Главное окно -->
@@ -29,7 +30,7 @@
       <h3>Загрузка файла</h3>
       <input type="file" ref="f" />
       <button @click="upload">Загрузить</button>
-      <div style="color:red">{{ fileError }}</div>
+      <div class="error">{{ fileError }}</div>
 
       <h3>Мои файлы ({{ files.length }})</h3>
       <ul>
@@ -99,15 +100,15 @@
       },
 
       async fetchAll() {
-        // профиль
+        // Получаем свой профиль
         const me = await fetch(API + "/auth/me", { headers: this.authHeaders() })
         this.profile = await me.json()
 
-        // файлы
+        // Список файлов
         const fl = await fetch(API + "/files/", { headers: this.authHeaders() })
         this.files = await fl.json()
 
-        // статистика
+        // Статистика
         const st = await fetch(API + "/files/stats", { headers: this.authHeaders() })
         this.stats = await st.json()
       },
@@ -125,7 +126,7 @@
 
         const res = await fetch(API + "/files/upload", {
           method: "POST",
-          headers: this.authHeaders(),  // не указываем Content-Type
+          headers: this.authHeaders(),  // заголовок Authorization
           body: fd
         })
         if (!res.ok) {
@@ -135,8 +136,31 @@
         await this.fetchAll()
       },
 
-      download(name) {
-        window.open(`${API}/files/download/${encodeURIComponent(name)}?token=${this.token}`)
+      async download(name) {
+        this.fileError = ""  // сброс предыдущей ошибки
+        try {
+          const res = await fetch(
+            `${API}/files/download/${encodeURIComponent(name)}`, {
+              headers: this.authHeaders()
+            }
+          )
+          if (!res.ok) {
+            const err = await res.json()
+            this.fileError = err.detail || "Ошибка при скачивании"
+            return
+          }
+          const blob = await res.blob()
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement("a")
+          a.href = url
+          a.download = name
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          URL.revokeObjectURL(url)
+        } catch {
+          this.fileError = "Ошибка при скачивании"
+        }
       },
 
       async remove(name) {
