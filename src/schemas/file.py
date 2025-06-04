@@ -1,6 +1,8 @@
 # src/schemas/file.py
+
 from datetime import datetime
 from pydantic import BaseModel
+
 
 class FileInfo(BaseModel):
     filename: str
@@ -10,8 +12,10 @@ class FileInfo(BaseModel):
     class Config:
         orm_mode = True
 
+
 class RenameRequest(BaseModel):
     new_name: str
+
 
 class FileDetail(FileInfo):
     """
@@ -19,9 +23,19 @@ class FileDetail(FileInfo):
     """
     size: int
 
+
 class FileStats(BaseModel):
     """
     Aggregated statistics for a user's files.
     """
     total_files: int
     total_size: int
+
+
+class PublicLinkResponse(BaseModel):
+    """
+    Response schema for a newly created public link.
+    """
+    filename: str
+    public_token: str
+    public_url: str

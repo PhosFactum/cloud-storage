@@ -1,5 +1,3 @@
-// app.js
-
 const API = "http://localhost:8002"
 
 const app = Vue.createApp({
@@ -12,7 +10,9 @@ const app = Vue.createApp({
       fileError: "",
       profile: {},
       files: [],
-      stats: {}
+      stats: {},
+      publicLinks: {},      // хранит публичные URL по имени файла
+      publicLinkError: ""   // ошибка при запросе публичной ссылки
     }
   },
   created() {
@@ -46,6 +46,8 @@ const app = Vue.createApp({
       this.profile = {}
       this.files = []
       this.stats = {}
+      this.publicLinks = {}
+      this.publicLinkError = ""
     },
 
     authHeaders() {
@@ -53,18 +55,21 @@ const app = Vue.createApp({
     },
 
     async fetchAll() {
-      // profile
-      const me  = await fetch(API + "/auth/me",    { headers: this.authHeaders() })
+      // получаем профиль
+      const me  = await fetch(API + "/auth/me", { headers: this.authHeaders() })
       this.profile = await me.json()
 
-      // files
-      const fl  = await fetch(API + "/files/",     { headers: this.authHeaders() })
+      // получаем список файлов
+      const fl  = await fetch(API + "/files/", { headers: this.authHeaders() })
       this.files = await fl.json()
 
-      // stats
+      // получаем статистику
       const st = await fetch(API + "/files/stats", { headers: this.authHeaders() })
       this.stats = await st.json()
 
+      // сбрасываем ранее сгенерированные ссылки (если были)
+      this.publicLinks = {}
+      this.publicLinkError = ""
     },
 
     async upload() {
@@ -80,7 +85,7 @@ const app = Vue.createApp({
 
       const res = await fetch(API + "/files/upload", {
         method:  "POST",
-        headers: this.authHeaders(),  // do not set Content-Type manually
+        headers: this.authHeaders(),  // указываем только Authorization
         body:    fd
       })
       if (!res.ok) {
@@ -123,9 +128,28 @@ const app = Vue.createApp({
         headers: this.authHeaders()
       })
       await this.fetchAll()
+    },
+
+    async makePublicLink(name) {
+      this.publicLinkError = ""
+      try {
+        const res = await fetch(`${API}/files/${encodeURIComponent(name)}/public-link`, {
+          method: "POST",
+          headers: this.authHeaders()
+        })
+        if (!res.ok) {
+          const err = await res.json()
+          this.publicLinkError = err.detail || "Ошибка при создании публичной ссылки"
+          return
+        }
+        const data = await res.json()
+        // сохраняем в словарь по имени файла
+        this.$set(this.publicLinks, name, data.public_url)
+      } catch {
+        this.publicLinkError = "Сетевая ошибка при создании публичной ссылки"
+      }
     }
   }
 })
 
 app.mount("#app")
-

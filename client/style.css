@@ -1,5 +1,3 @@
-/* style.css */
-
 body {
   font-family: sans-serif;
   padding: 0;
@@ -94,12 +92,12 @@ ul {
 }
 li {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
   background: #fff;
-  padding: 0.5rem;
+  padding: 1rem;
   margin: 0.5rem auto;
-  max-width: 400px;
+  max-width: 500px;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
@@ -108,13 +106,35 @@ li .filename {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
 }
 
 /* File actions wrapper */
 .file-actions {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Публичная ссылка */
+.public-link {
+  width: 100%;
+  font-size: 0.85rem;
+  color: #007bff;
+  margin-top: 0.5rem;
+  word-break: break-all;
+  padding: 0.5rem;
+  background: #f0f8ff;
+  border-radius: 4px;
+  border: 1px solid #cce5ff;
+}
+.public-link a {
+  color: #007bff;
+  text-decoration: none;
+}
+.public-link a:hover {
+  text-decoration: underline;
 }
 
 /* Headings */
@@ -139,4 +159,3 @@ h2, h3 {
 .site-footer a:hover {
   text-decoration: underline;
 }
-
