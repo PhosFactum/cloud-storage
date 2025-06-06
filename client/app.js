@@ -1,3 +1,5 @@
+// client/app.js
+
 const API = "http://localhost:8002"
 
 const app = Vue.createApp({
@@ -85,7 +87,7 @@ const app = Vue.createApp({
 
       const res = await fetch(API + "/files/upload", {
         method:  "POST",
-        headers: this.authHeaders(),  // указываем только Authorization
+        headers: this.authHeaders(),  // требует токен
         body:    fd
       })
       if (!res.ok) {
@@ -96,6 +98,7 @@ const app = Vue.createApp({
     },
 
     async download(name) {
+      // приватное скачивание — остаётся fetch с Authorization
       this.fileError = ""
       try {
         const res = await fetch(
@@ -132,20 +135,26 @@ const app = Vue.createApp({
 
     async makePublicLink(name) {
       this.publicLinkError = ""
+
       try {
-        const res = await fetch(`${API}/files/${encodeURIComponent(name)}/public-link`, {
-          method: "POST",
-          headers: this.authHeaders()
-        })
+        // Приватный POST для генерации токена
+        const res = await fetch(
+          `${API}/files/${encodeURIComponent(name)}/public-link`,
+          {
+            method: "POST",
+            headers: this.authHeaders()
+          }
+        )
         if (!res.ok) {
-          const err = await res.json()
+          const err = await res.json().catch(() => ({}))
           this.publicLinkError = err.detail || "Ошибка при создании публичной ссылки"
           return
         }
         const data = await res.json()
-        // сохраняем в словарь по имени файла
+        // data.public_url = например "http://localhost:8002/files/public/<token>"
         this.$set(this.publicLinks, name, data.public_url)
-      } catch {
+      } catch (e) {
+        console.error("Ошибка при запросе публичной ссылки:", e)
         this.publicLinkError = "Сетевая ошибка при создании публичной ссылки"
       }
     }

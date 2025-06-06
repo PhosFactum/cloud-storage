@@ -343,14 +343,14 @@ async def make_public_link(
     response_class=FileResponse,
     summary="Download file by public token",
     response_description="Binary content of the file",
-    dependencies=[],
+    dependencies=[],  # без авторизации
 )
 async def download_by_public_token(
     token: str,
     db: Session = Depends(get_db),
 ):
     """
-    Позволяет скачать файл любому пользователю по public UUID‑токену.
+    Позволяет скачать файл любому пользователю по public UUID‑token.
     """
     record = get_file_by_token(db, token)
     if not record:

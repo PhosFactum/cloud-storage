@@ -1,3 +1,5 @@
+/* style.css */
+
 body {
   font-family: sans-serif;
   padding: 0;
@@ -93,7 +95,7 @@ ul {
 li {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;      /* Название и кнопки теперь будут по центру */
   background: #fff;
   padding: 1rem;
   margin: 0.5rem auto;
@@ -102,7 +104,8 @@ li {
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 li .filename {
-  flex: 1;
+  width: 100%;
+  text-align: center;       /* Центрируем название файла */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -113,6 +116,7 @@ li .filename {
 /* File actions wrapper */
 .file-actions {
   display: flex;
+  justify-content: center;   /* Центрируем кнопки под названием */
   gap: 0.5rem;
   margin-top: 0.5rem;
 }

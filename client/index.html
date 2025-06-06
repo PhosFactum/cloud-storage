@@ -1,3 +1,4 @@
+<!-- client/index.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -41,12 +42,16 @@
         <li v-for="f in files" :key="f">
           <span class="filename">{{ f }}</span>
           <div class="file-actions">
+            <!-- приватное скачивание -->
             <button @click="download(f)">📥</button>
+            <!-- удаление -->
             <button @click="remove(f)">🗑</button>
+            <!-- генерация публичного токена -->
             <button @click="makePublicLink(f)">🔗</button>
           </div>
+          <!-- Выводим публичную ссылку как простой текст -->
           <div v-if="publicLinks[f]" class="public-link">
-            <a :href="publicLinks[f]" target="_blank">{{ publicLinks[f] }}</a>
+            Публичная ссылка: <code>{{ publicLinks[f] }}</code>
           </div>
         </li>
       </ul>
