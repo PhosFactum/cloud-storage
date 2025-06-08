@@ -1,86 +1,25 @@
-<!-- client/index.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Cloud Storage Client</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Cloud Storage</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- HEADER -->
-  <header class="site-header">
-    <h1>Cloud Storage</h1>
-  </header>
+  <div id="app">
+    <header class="site-header">
+      <h1>Cloud Storage</h1>
+    </header>
 
-  <main id="app">
-    <!-- Аутентификация -->
-    <template v-if="!token">
-      <h2>Вход</h2>
-      <input v-model="email" placeholder="Email" />
-      <input v-model="password" type="password" placeholder="Пароль" />
+    <main id="main" class="main-content"></main>
 
-      <div class="auth-buttons">
-        <button @click="login">Войти</button>
-        <button @click="register">Зарегистрироваться</button>
-      </div>
+    <footer class="site-footer">
+      <p>Cloud Storage — облачное хранилище для учебного проекта. Стек: FastAPI, PostgreSQL, SQLAlchemy, JWT, Docker.</p>
+      <p><a href="https://github.com/PhosFactum/cloud-storage" target="_blank">github.com/PhosFactum/cloud-storage</a></p>
+    </footer>
+  </div>
 
-      <div class="error">{{ authError }}</div>
-    </template>
-
-    <!-- Главное окно -->
-    <template v-else>
-      <h2>Привет, {{ profile.email }}!</h2>
-      <button class="logout-btn" @click="logout">Выйти</button>
-
-      <h3>Загрузка файла</h3>
-      <input type="file" ref="f" />
-      <button @click="upload">Загрузить</button>
-      <div class="error">{{ fileError }}</div>
-
-      <h3>Мои файлы ({{ files.length }})</h3>
-      <ul>
-        <li v-for="f in files" :key="f">
-          <span class="filename">{{ f }}</span>
-          <div class="file-actions">
-            <!-- приватное скачивание -->
-            <button @click="download(f)">📥</button>
-            <!-- удаление -->
-            <button @click="remove(f)">🗑</button>
-            <!-- генерация публичного токена -->
-            <button @click="makePublicLink(f)">🔗</button>
-          </div>
-          <!-- Выводим публичную ссылку как простой текст -->
-          <div v-if="publicLinks[f]" class="public-link">
-            Публичная ссылка: <code>{{ publicLinks[f] }}</code>
-          </div>
-        </li>
-      </ul>
-
-      <!-- Ошибка при создании публичной ссылки -->
-      <div v-if="publicLinkError" class="error">{{ publicLinkError }}</div>
-
-      <h3>Статистика</h3>
-      <div>Всего файлов: {{ stats.total_files }}</div>
-      <div>Общий размер: {{ stats.total_size }} байт</div>
-    </template>
-  </main>
-
-  <!-- FOOTER -->
-  <footer class="site-footer">
-    <p>
-      <strong>Cloud Storage API</strong> — это защищённое REST API для загрузки, управления и получения информации о пользовательских файлах.<br>
-      Проектная работа по дисциплине «Алгоритмы и структуры данных».<br>
-      Технологический стек: FastAPI, PostgreSQL, SQLAlchemy, JWT-аутентификация, Docker.
-    </p>
-    <p>
-      Репозиторий:
-      <a href="https://github.com/PhosFactum/cloud-storage" target="_blank">
-        github.com/PhosFactum/cloud-storage
-      </a>
-    </p>
-  </footer>
-
-  <script src="https://unpkg.com/vue@3"></script>
   <script src="app.js"></script>
 </body>
 </html>

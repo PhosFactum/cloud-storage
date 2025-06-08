@@ -1,13 +1,18 @@
 /* style.css */
 
-body {
-  font-family: sans-serif;
-  padding: 0;
-  margin: 0;
-  background: #f9f9f9;
+/* Добавляем flex-контейнер на уровень всего приложения */
+#app {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #f9f9f9;
+  /* убираем уже объявленные flex на body,
+     теперь управляет #app */
 }
 
 /* Header */
@@ -23,8 +28,9 @@ body {
   font-size: 1.5rem;
 }
 
-/* Main */
-main#app {
+main#main {
+  /* main занимает всё оставшееся пространство,
+     чтобы футер прижимался к низу */
   flex: 1;
   padding: 1rem;
   max-width: 600px;
@@ -32,7 +38,7 @@ main#app {
   text-align: center;
 }
 
-/* Inputs */
+/* Остальной CSS без изменений */
 input {
   display: block;
   width: 100%;
@@ -50,7 +56,6 @@ input:focus {
   outline: none;
 }
 
-/* Buttons */
 button {
   background-color: #007bff;
   color: #fff;
@@ -60,42 +65,34 @@ button {
   border-radius: 4px;
   cursor: pointer;
   transition: opacity 0.2s ease-in-out;
+  margin: 0.5rem;
 }
 button:hover {
   opacity: 0.8;
 }
 
-/* Auth buttons wrapper */
-.auth-buttons {
+.auth {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.auth-forms {
   display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  margin: 1rem 0;
-}
-.auth-buttons button {
-  flex: 1;
+  justify-content: space-around;
+  flex-wrap: wrap;
 }
 
-/* Logout button spacing */
-.logout-btn {
-  margin-bottom: 1rem;
-}
-
-/* Error messages */
-.error {
-  color: #e74c3c;
-  margin-top: 0.5rem;
-}
-
-/* File list */
-ul {
+ul.file-list {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
-li {
+.file-item {
   display: flex;
   flex-direction: column;
-  align-items: center;      /* Название и кнопки теперь будут по центру */
+  align-items: center;
   background: #fff;
   padding: 1rem;
   margin: 0.5rem auto;
@@ -103,9 +100,9 @@ li {
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
-li .filename {
+.file-item .filename {
   width: 100%;
-  text-align: center;       /* Центрируем название файла */
+  text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -113,15 +110,13 @@ li .filename {
   font-weight: 500;
 }
 
-/* File actions wrapper */
 .file-actions {
   display: flex;
-  justify-content: center;   /* Центрируем кнопки под названием */
+  justify-content: center;
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
 
-/* Публичная ссылка */
 .public-link {
   width: 100%;
   font-size: 0.85rem;
@@ -141,13 +136,16 @@ li .filename {
   text-decoration: underline;
 }
 
-/* Headings */
-h2, h3 {
-  margin-top: 1.5rem;
-  margin-bottom: 0.5rem;
+.stats {
+  margin-top: 1rem;
+  font-weight: 500;
 }
 
-/* Footer */
+.error {
+  color: #e74c3c;
+  margin-top: 0.5rem;
+}
+
 .site-footer {
   background: #f1f1f1;
   padding: 1rem;
