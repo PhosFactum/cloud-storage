@@ -1,6 +1,8 @@
 (() => {
   const API = "http://localhost:8002";
   const main = document.getElementById("main");
+  let userId = null;      // заполнится после /auth/me
+  let userPrefix = "";    // будет "user_{userId}"
 
   function getToken() {
     return localStorage.getItem("token");
@@ -8,9 +10,9 @@
   function authHeaders() {
     return { "Authorization": "Bearer " + getToken() };
   }
-
   function showError(container, msg) {
     container.querySelectorAll(".error").forEach(e => e.remove());
+    if (!msg) return;
     const div = document.createElement("div");
     div.className = "error";
     div.textContent = msg;
@@ -21,6 +23,18 @@
     if (!getToken()) {
       renderAuth();
     } else {
+      // получаем профиль
+      try {
+        const res = await fetch(API + "/auth/me", { headers: authHeaders() });
+        if (!res.ok) throw new Error();
+        const profile = await res.json();
+        userId = profile.id;
+        userPrefix = `user_${userId}`;
+      } catch {
+        // разлогиниваемся, если токен протух
+        localStorage.removeItem("token");
+        return renderAuth();
+      }
       await renderFiles();
     }
   }
@@ -28,10 +42,9 @@
   // --- Авторизация ---
   function renderAuth() {
     main.innerHTML = "";
-    const div = document.createElement("div");
-    div.className = "auth";
-
-    div.innerHTML = `
+    const d = document.createElement("div");
+    d.className = "auth";
+    d.innerHTML = `
       <h2>Вход / Регистрация</h2>
       <div class="auth-forms">
         <div>
@@ -48,46 +61,46 @@
         </div>
       </div>
     `;
-    main.appendChild(div);
+    main.appendChild(d);
 
-    document.getElementById("btn-register").onclick = async () => {
-      showError(div, "");
+    d.querySelector("#btn-register").onclick = async () => {
+      showError(d, "");
       try {
         const res = await fetch(API + "/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email: document.getElementById("up-email").value,
-            password: document.getElementById("up-pass").value,
+            email: d.querySelector("#up-email").value,
+            password: d.querySelector("#up-pass").value,
           }),
         });
         if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.detail || "Ошибка регистрации");
+          const e = await res.json();
+          throw new Error(e.detail || "Ошибка регистрации");
         }
-        alert("Регистрация успешна. Войдите, пожалуйста.");
-      } catch (err) {
-        showError(div, err.message);
+        alert("Регистрация прошла успешно. Войдите.");
+      } catch (e) {
+        showError(d, e.message);
       }
     };
 
-    document.getElementById("btn-login").onclick = async () => {
-      showError(div, "");
+    d.querySelector("#btn-login").onclick = async () => {
+      showError(d, "");
       try {
         const res = await fetch(API + "/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email: document.getElementById("in-email").value,
-            password: document.getElementById("in-pass").value,
+            email: d.querySelector("#in-email").value,
+            password: d.querySelector("#in-pass").value,
           }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || "Ошибка входа");
         localStorage.setItem("token", data.access_token);
         await render();
-      } catch (err) {
-        showError(div, err.message);
+      } catch (e) {
+        showError(d, e.message);
       }
     };
   }
@@ -98,22 +111,21 @@
     const div = document.createElement("div");
     div.className = "files";
 
-    // Кнопка выход
+    // Кнопка «Выйти»
     const btnOut = document.createElement("button");
     btnOut.textContent = "Выйти";
     btnOut.onclick = () => {
       localStorage.removeItem("token");
+      userId = null;
       render();
     };
     div.appendChild(btnOut);
 
-    // Раздел загрузки
+    // Секция загрузки
     const upDiv = document.createElement("div");
     upDiv.className = "upload-section";
-    const inp = document.createElement("input");
-    inp.type = "file";
-    const btnUp = document.createElement("button");
-    btnUp.textContent = "Загрузить";
+    const inp = document.createElement("input"); inp.type = "file";
+    const btnUp = document.createElement("button"); btnUp.textContent = "Загрузить";
     btnUp.onclick = async () => {
       showError(upDiv, "");
       if (!inp.files[0]) return showError(upDiv, "Выберите файл");
@@ -125,62 +137,68 @@
           headers: authHeaders(),
           body: fd,
         });
-        if (!res.ok) throw new Error("Ошибка загрузки");
+        if (!res.ok) {
+          const e = await res.json();
+          throw new Error(e.detail || "Ошибка загрузки");
+        }
         await refreshList(listUl);
         await renderStats(statsDiv);
-      } catch (err) {
-        showError(upDiv, err.message);
+      } catch (e) {
+        showError(upDiv, e.message);
       }
     };
     upDiv.append(inp, btnUp);
     div.appendChild(upDiv);
 
-    // Список файлов
+    // Список и статистика
     const listUl = document.createElement("ul");
     listUl.className = "file-list";
-    div.appendChild(listUl);
-
-    // Статистика
     const statsDiv = document.createElement("div");
     statsDiv.className = "stats";
-    div.appendChild(statsDiv);
 
+    div.append(listUl, statsDiv);
     main.appendChild(div);
 
     await refreshList(listUl);
     await renderStats(statsDiv);
   }
 
+  // Получить и отрисовать список (префикс userPrefix автоматически добавляется)
   async function refreshList(container) {
     container.innerHTML = "";
     try {
-      const res = await fetch(API + "/files/", { headers: authHeaders() });
-      if (!res.ok) throw new Error("Не удалось получить файлы");
-      const list = await res.json();
-      list.forEach((file) => {
+      const res = await fetch(`${API}/files/`, {
+        headers: authHeaders()
+      });
+      if (!res.ok) throw new Error("Не удалось получить список");
+      const { files } = await res.json(); // теперь точно {directories, files}, но мы работаем только с files
+
+      files.forEach(name => {
+        const fullPath = `${userPrefix}/${name}`;
         const li = document.createElement("li");
         li.className = "file-item";
-        const name = document.createElement("div");
-        name.className = "filename";
-        name.textContent = file;
 
-        const actions = document.createElement("div");
-        actions.className = "file-actions";
+        const nm = document.createElement("div");
+        nm.className = "filename";
+        nm.textContent = name;
+
+        const acts = document.createElement("div");
+        acts.className = "file-actions";
 
         const btnDl = document.createElement("button");
         btnDl.textContent = "📥";
-        btnDl.onclick = () => downloadFile(file);
+        btnDl.onclick = () => downloadFile(fullPath);
 
-        const btnLink = document.createElement("button");
-        btnLink.textContent = "🔗";
-        btnLink.onclick = () => getPublicLink(file);
+        const btnPub = document.createElement("button");
+        btnPub.textContent = "🔗";
+        btnPub.onclick = () => getPublicLink(fullPath);
 
         const btnDel = document.createElement("button");
         btnDel.textContent = "🗑️";
-        btnDel.onclick = () => deleteFile(file, container);
+        btnDel.onclick = () => deleteFile(fullPath, container);
 
-        actions.append(btnDl, btnLink, btnDel);
-        li.append(name, actions);
+        acts.append(btnDl, btnPub, btnDel);
+        li.append(nm, acts);
         container.appendChild(li);
       });
     } catch (err) {
@@ -188,21 +206,26 @@
     }
   }
 
+  // Отрисовать статистику
   async function renderStats(container) {
+    container.textContent = "";
     try {
-      const res = await fetch(API + "/files/stats", { headers: authHeaders() });
+      const res = await fetch(API + "/files/stats", {
+        headers: authHeaders()
+      });
       if (!res.ok) throw new Error("Не удалось получить статистику");
-      const data = await res.json();
-      container.textContent = `Всего файлов: ${data.total_files}, общий размер: ${data.total_size} байт`;
+      const { total_files, total_size } = await res.json();
+      container.textContent = `Всего файлов: ${total_files}, размер: ${total_size} байт`;
     } catch (err) {
       showError(container, err.message);
     }
   }
 
-  async function downloadFile(file) {
+  // Скачивание
+  async function downloadFile(fullPath) {
     try {
       const res = await fetch(
-        API + "/files/download/" + encodeURIComponent(file),
+        `${API}/files/download/${encodeURIComponent(fullPath)}`,
         { headers: authHeaders() }
       );
       if (!res.ok) throw new Error("Ошибка скачивания");
@@ -210,44 +233,44 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = file;
+      a.download = fullPath.split("/").pop();
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (err) {
-      alert(err.message);
+    } catch (e) {
+      alert(e.message);
     }
   }
 
-  async function deleteFile(file, container) {
-    if (!confirm(`Удалить ${file}?`)) return;
+  // Удаление
+  async function deleteFile(fullPath, container) {
+    if (!confirm(`Удалить ${fullPath.split("/").pop()}?`)) return;
     try {
       const res = await fetch(
-        API + "/files/" + encodeURIComponent(file),
+        `${API}/files/${encodeURIComponent(fullPath)}`,
         { method: "DELETE", headers: authHeaders() }
       );
       if (!res.ok) throw new Error("Не удалось удалить");
       await refreshList(container);
       await renderStats(container.parentNode.querySelector(".stats"));
-    } catch (err) {
-      alert(err.message);
+    } catch (e) {
+      alert(e.message);
     }
   }
 
-  async function getPublicLink(file) {
+  // Публичная ссылка
+  async function getPublicLink(fullPath) {
     try {
       const res = await fetch(
-        API + "/files/" + encodeURIComponent(file) + "/public-link",
+        `${API}/files/${encodeURIComponent(fullPath)}/public-link`,
         { method: "POST", headers: authHeaders() }
       );
       if (!res.ok) throw new Error("Ошибка ссылки");
-      const data = await res.json();
-      document.querySelectorAll(".public-link").forEach(e => e.remove());
-      const linkBox = document.createElement("div");
-      linkBox.className = "public-link";
-      linkBox.innerHTML = `Публичная ссылка: <a href="${data.public_url}" target="_blank">${data.public_url}</a>`;
-      document.getElementById("main").appendChild(linkBox);
-    } catch (err) {
-      alert(err.message);
+      const { public_url } = await res.json();
+      alert("Публичная ссылка:\n" + public_url);
+    } catch (e) {
+      alert(e.message);
     }
   }
 

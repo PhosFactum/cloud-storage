@@ -8,13 +8,12 @@ from passlib.context import CryptContext
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def get_user_by_email(db: Session, email: str):
+def get_user_by_email(db: Session, email: str) -> User | None:
     return db.query(User).filter(User.email == email).first()
 
 
-def create_user(db: Session, user_in: UserCreate):
-    hashed = pwd_context.hash(user_in.password)
-    user = User(email=user_in.email, hashed_password=hashed)
+def create_user(db: Session, email: str, hashed_password: str) -> User:
+    user = User(email=email, hashed_password=hashed_password)
     db.add(user)
     db.commit()
     db.refresh(user)

@@ -53,3 +53,15 @@ class PublicLinkResponse(BaseModel):
     filename: str
     public_token: str
     public_url: str
+
+
+class ListDirResponse(BaseModel):
+    """
+    Ответ при запросе содержимого директории:
+    {
+      "directories": ["subdir1", ...],
+      "files": ["file1.txt", ...]
+    }
+    """
+    directories: list[str]
+    files: list[str]
