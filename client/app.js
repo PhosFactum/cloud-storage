@@ -1,8 +1,8 @@
 (() => {
   const API = "http://localhost:8002";
   const main = document.getElementById("main");
-  let userId = null;      // заполнится после /auth/me
-  let userPrefix = "";    // будет "user_{userId}"
+  let userId = null;
+  let userPrefix = "";
 
   function getToken() {
     return localStorage.getItem("token");
@@ -31,7 +31,6 @@
         userId = profile.id;
         userPrefix = `user_${userId}`;
       } catch {
-        // разлогиниваемся, если токен протух
         localStorage.removeItem("token");
         return renderAuth();
       }
@@ -143,6 +142,7 @@
         }
         await refreshList(listUl);
         await renderStats(statsDiv);
+        publicLinkDiv.style.display = "none";
       } catch (e) {
         showError(upDiv, e.message);
       }
@@ -156,14 +156,19 @@
     const statsDiv = document.createElement("div");
     statsDiv.className = "stats";
 
-    div.append(listUl, statsDiv);
+    // Блок для публичной ссылки
+    const publicLinkDiv = document.createElement("div");
+    publicLinkDiv.className = "public-link";
+    publicLinkDiv.style.display = "none";  // прячем по умолчанию
+
+    div.append(listUl, statsDiv, publicLinkDiv);
     main.appendChild(div);
 
     await refreshList(listUl);
     await renderStats(statsDiv);
   }
 
-  // Получить и отрисовать список (префикс userPrefix автоматически добавляется)
+  // Получить и отрисовать список
   async function refreshList(container) {
     container.innerHTML = "";
     try {
@@ -171,7 +176,7 @@
         headers: authHeaders()
       });
       if (!res.ok) throw new Error("Не удалось получить список");
-      const { files } = await res.json(); // теперь точно {directories, files}, но мы работаем только с files
+      const { files } = await res.json();
 
       files.forEach(name => {
         const fullPath = `${userPrefix}/${name}`;
@@ -254,6 +259,8 @@
       if (!res.ok) throw new Error("Не удалось удалить");
       await refreshList(container);
       await renderStats(container.parentNode.querySelector(".stats"));
+      // прячем прошлую ссылку
+      container.parentNode.querySelector(".public-link").style.display = "none";
     } catch (e) {
       alert(e.message);
     }
@@ -261,6 +268,8 @@
 
   // Публичная ссылка
   async function getPublicLink(fullPath) {
+    const publicLinkDiv = document.querySelector(".public-link");
+    publicLinkDiv.style.display = "none";
     try {
       const res = await fetch(
         `${API}/files/${encodeURIComponent(fullPath)}/public-link`,
@@ -268,9 +277,12 @@
       );
       if (!res.ok) throw new Error("Ошибка ссылки");
       const { public_url } = await res.json();
-      alert("Публичная ссылка:\n" + public_url);
+      publicLinkDiv.innerHTML = `Публичная ссылка: <a href="${public_url}" target="_blank">${public_url}</a>`;
+      publicLinkDiv.style.display = "block";
+      publicLinkDiv.scrollIntoView({ behavior: "smooth" });
     } catch (e) {
-      alert(e.message);
+      publicLinkDiv.innerHTML = `Ошибка получения ссылки: ${e.message}`;
+      publicLinkDiv.style.display = "block";
     }
   }
 
