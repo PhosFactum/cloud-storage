@@ -25,6 +25,7 @@ services:
       - ./migrations:/app/migrations
       - ./run.sh:/app/run.sh
       - ./requirements.txt:/app/requirements.txt
+      - ./uploads:/app/uploads
     x-develop:
       watch:
         - action: sync+restart
